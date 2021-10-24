@@ -36,7 +36,6 @@
 
 
 #include <spinlock.h>
-#include <cpu.h>
 
 /*
  * Dijkstra-style semaphore.
@@ -45,14 +44,13 @@
  * internally.
  */
 struct semaphore {
-    char *sem_name;
-    struct wchan *sem_wchan;
-    struct spinlock sem_lock;
-    volatile unsigned sem_count;
+        char *sem_name;
+	struct wchan *sem_wchan;
+	struct spinlock sem_lock;
+        volatile unsigned sem_count;
 };
 
 struct semaphore *sem_create(const char *name, unsigned initial_count);
-
 void sem_destroy(struct semaphore *);
 
 /*
@@ -62,7 +60,6 @@ void sem_destroy(struct semaphore *);
  *     V (verhogen): increment count.
  */
 void P(struct semaphore *);
-
 void V(struct semaphore *);
 
 
@@ -79,9 +76,6 @@ struct lock {
         char *lk_name;
         // add what you need here
         // (don't forget to mark things volatile as needed)
-        struct wchan *lk_wchan;
-	struct spinlock lk_lock;
-	struct thread *volatile lk_holder;
 };
 
 struct lock *lock_create(const char *name);
@@ -121,12 +115,9 @@ struct cv {
         char *cv_name;
         // add what you need here
         // (don't forget to mark things volatile as needed)
-        struct wchan *cv_wchan;
-	struct spinlock cv_wchanlock;
 };
 
 struct cv *cv_create(const char *name);
-
 void cv_destroy(struct cv *);
 
 /*
@@ -143,9 +134,7 @@ void cv_destroy(struct cv *);
  * These operations must be atomic. You get to write them.
  */
 void cv_wait(struct cv *cv, struct lock *lock);
-
 void cv_signal(struct cv *cv, struct lock *lock);
-
 void cv_broadcast(struct cv *cv, struct lock *lock);
 
 
