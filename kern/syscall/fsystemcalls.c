@@ -16,6 +16,8 @@
 #include <synch.h> //
 
 //open files with given flags
+struct file* file_create(struct vnode*);
+
 int
 open(const char *filename, int flags, int32_t *retval){
     struct vnode *vn=NULL;
@@ -81,7 +83,7 @@ write(int fd, const void *buf, size_t nbytes, int32_t *retval1){
 
     struct file *file;
     lock_acquire(filetable->lk_ft);
-    if(fd<0||fd>=OPEN_MAX && filetable->filetable[fd]!=NULL){
+    if((fd<0||fd>=OPEN_MAX) && (filetable->filetable[fd]!=NULL)){
         lock_release(filetable->lk_ft);
         return EBADF;
     }else{
@@ -133,7 +135,7 @@ read(int fd, void *buf, size_t buflen, int32_t *retval1){
 
     struct file *file;
     lock_acquire(filetable->lk_ft);
-    if(fd<0||fd>=OPEN_MAX&& filetable->filetable[fd]!=NULL){
+    if((fd<0||fd>=OPEN_MAX)&& (filetable->filetable[fd]!=NULL)){
         lock_release(filetable->lk_ft);
         return EBADF;
     }else{
@@ -150,7 +152,7 @@ read(int fd, void *buf, size_t buflen, int32_t *retval1){
    
     track.iov_len=buflen;
     track.iov_ubase=(userptr_t)buf;
-    control.uio_space=curproc->addrspace;
+    control.uio_space=curproc->p_addrspace;
     control.uio_iovcnt=1;
     control.uio_iov=&track;
     control.uio_resid=buflen;
@@ -182,7 +184,7 @@ lseek(int fd, off_t pos, int whence, int32_t*retval1, int32_t *retval2){
     
     lock_acquire(filetable->lk_ft);
 
-    if(fd<0||fd>=OPEN_MAX && filetable->filetable[fd]!=NULL){
+    if((fd<0||fd>=OPEN_MAX) && (filetable->filetable[fd]!=NULL)){
         lock_release(filetable->lk_ft);
         return EBADF;
     }else{
@@ -270,7 +272,7 @@ int dup2(int oldFile, int newFile, int *out){
         freeFd(ft, newFile);                                     
       }
         addNewFd(ft, fileItem, newFile);                          
-        lock_release(ft->ft_lock);
+        lock_release(ft->lk_ft);
         *out = newFile;  
         return 0;
     }
@@ -289,7 +291,7 @@ int chdir(const char *name)
     int error;
     char *route;
     size_t *len;
-    int output = vfs_chdir(char * name);
+    int output = vfs_chdir((char*)name);
     
     len = kmalloc(sizeof(int));
     route = kmalloc(PATH_MAX);
@@ -315,13 +317,13 @@ int chdir(const char *name)
 *@param size - length of the holder
 *@param out - if succussfully store the content
 */
-int ___getcwd(char *buffer, size_t size, int32_t *out){   
+int __getcwd(char *buffer, size_t size, int32_t *out){   
     int temp;
     struct iovec track;
     struct uio control;
     
     track.iov_len=size;                                //Stores the current working directory at buf
-    track.iov_ubase=(userptr_t)buf;
+    track.iov_ubase=(userptr_t)buffer;
     control.uio_space=curproc->p_addrspace;
     control.uio_iovcnt=1;
     control.uio_iov=&track;

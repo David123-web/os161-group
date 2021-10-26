@@ -7,24 +7,23 @@
 #include <vnode.h>
 #include <vfs.h> //
 #include <kern/fcntl.h> //
+#include <synch.h>
 
-
+struct file* file_create(struct vnode*);
 //initialize the filetable
 int ft_init(struct ft*filetable){
     struct vnode *vn=NULL;
     char *cons1=NULL;
     char *cons2=NULL;
     char *cons3=NULL;
-    struct ft *filetable;
     
-
     int success;
 
     KASSERT(filetable!=NULL);
 
     //STDIN
     cons1=kstrdup("con:");
-    success=vfa_open(cons1, O_RDONLY, 0,&vn);
+    success=vfs_open(cons1, O_RDONLY, 0,&vn);
     if(success){
        return success;
     }
@@ -41,7 +40,7 @@ int ft_init(struct ft*filetable){
     //STDOUT
     struct vnode *vn1;
     cons2=kstrdup("con:");
-    success=vfa_open(cons2, O_WRONLY, 1,&vn1);
+    success=vfs_open(cons2, O_WRONLY, 1,&vn1);
     if(success){
         return success;
     }
@@ -57,7 +56,7 @@ int ft_init(struct ft*filetable){
     //STDERR
     struct vnode *vn2;
     cons3=kstrdup("con:");
-    success=vfa_open(cons3, O_WRONLY, 2,&vn2);
+    success=vfs_open(cons3, O_WRONLY, 2,&vn2);
     if(success){
         return success;
     }
@@ -117,13 +116,13 @@ struct ft* filetable_create(void){
 int new_file(struct ft* filetable, struct file* file, int *fd){
     for(int i=3; i<OPEN_MAX; i++){
         if(filetable->filetable[i]==NULL){
-            KASSERT(fd>=0&&fd<OPEN_MAX);
+            KASSERT(i>=0&&i<OPEN_MAX);
             filetable->filetable[i]=file;
-            lock_acqurie(file->lk_file);
+            lock_acquire(file->lk_file);
             file->refcount++;
             lock_release(file->lk_file);
             *fd=i;
-            return;
+            return 0;
         }
     }
     return EMFILE;
