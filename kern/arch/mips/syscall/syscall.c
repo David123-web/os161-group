@@ -26,7 +26,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
 #include <types.h>
 #include <kern/errno.h>
 #include <kern/syscall.h>
@@ -35,6 +34,13 @@
 #include <thread.h>
 #include <current.h>
 #include <syscall.h>
+#include <proc.h>
+#include <addrspace.h>
+#include <copyinout.h>
+#include <kern/wait.h>
+#include <vm.h>
+#include <syscall.h>
+#include <fsystemcalls.h>
 
 
 /*
@@ -79,7 +85,9 @@ void
 syscall(struct trapframe *tf)
 {
 	int callno;
-	int32_t retval;
+	
+	int32_t retval1;
+	int32_t retval2;
 	int err;
 
 	KASSERT(curthread != NULL);
@@ -97,7 +105,8 @@ syscall(struct trapframe *tf)
 	 * like write.
 	 */
 
-	retval = 0;
+	retval1 = 0;
+	retval2 =0;
 
 	switch (callno) {
 	    case SYS_reboot:
@@ -110,6 +119,41 @@ syscall(struct trapframe *tf)
 		break;
 
 	    /* Add stuff here */
+		case SYS_open:
+		err =  open((const char *)tf->tf_a0, (int) tf->tf_a1, &retval1);
+		break;
+
+		case SYS_write:
+		err =  write((int)tf->tf_a0, (const void *) tf->tf_a1, (size_t)tf->tf_a2, &retval1);
+		break;
+
+		case SYS_read:
+		err = read((int)tf->tf_a0, (void *)tf->tf_a1, (size_t)tf->tf_a2, &retval1);
+
+		case SYS_lseek: ;
+		int whence;
+		whence=0; 
+		const_userptr_t copy=(const_userptr_t)(tf->tf_sp + 16);
+		copyin(copy, &whence, sizeof(int));
+		off_t *place=(off_t *) &tf->tf_a2;
+		err=lseek((int)tf->tf_a0, *place, whence, &retval1, &retval2);
+		break;
+
+		case SYS_close:
+		err=close((int)tf->tf_a0);
+		break;
+
+		case SYS_dup2:
+		err=dup2((int)tf->tf_a0, (int)tf->tf_a1, &retval1);
+		break;
+
+		case SYS_chdir: 
+		err=chdir((const char*)tf->tf_a0);
+		break;
+
+		case SYS___getcwd:
+		err = __getcwd((char*)tf->tf_a0, (size_t)tf->tf_a1, &retval1);
+		break;
 
 	    default:
 		kprintf("Unknown syscall %d\n", callno);
@@ -129,7 +173,8 @@ syscall(struct trapframe *tf)
 	}
 	else {
 		/* Success. */
-		tf->tf_v0 = retval;
+		tf->tf_v0 = retval1;
+		tf->tf_v1 = retval2;
 		tf->tf_a3 = 0;      /* signal no error */
 	}
 

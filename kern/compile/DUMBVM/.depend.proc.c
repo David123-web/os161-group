@@ -8,4 +8,7 @@ proc.o: ../../proc/proc.c ../../include/types.h \
  ../../include/setjmp.h includelinks/kern/machine/setjmp.h \
  ../../include/current.h includelinks/machine/current.h \
  ../../include/addrspace.h ../../include/vm.h includelinks/machine/vm.h \
- opt-dumbvm.h ../../include/vnode.h
+ opt-dumbvm.h ../../include/vnode.h ../../include/filetable.h \
+ ../../include/synch.h ../../include/cpu.h ../../include/limits.h \
+ ../../include/kern/limits.h ../../include/kern/errno.h \
+ ../../include/fsystemcalls.h ../../include/kern/seek.h
