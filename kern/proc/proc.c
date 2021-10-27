@@ -77,7 +77,7 @@ proc_create(const char *name)
 		return NULL;
 	}
 
-	proc->proc_ft=filetable_create();
+	proc->proc_ft=filetable_create(); //create the filetable when new process occurs
 	if(proc->proc_ft==NULL){
 		kfree(proc);
 		return NULL;
@@ -175,7 +175,7 @@ proc_destroy(struct proc *proc)
 		as_destroy(as);
 	}
 
-	file_destroy(proc->proc_ft);
+	file_destroy(proc->proc_ft);  
 
 	threadarray_cleanup(&proc->p_threads);
 	spinlock_cleanup(&proc->p_lock);
@@ -213,7 +213,7 @@ proc_create_runprogram(const char *name)
 		return NULL;
 	}
 
-	if(ft_init(newproc->proc_ft)){
+	if(ft_init(newproc->proc_ft)){  //intialize the filetable and add the three default descriptors
 		kfree(newproc);
 		return NULL;
 	}

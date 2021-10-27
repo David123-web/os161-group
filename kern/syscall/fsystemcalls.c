@@ -189,20 +189,20 @@ lseek(int fd, off_t pos, int whence, int32_t*retval1, int32_t *retval2){
 
     if((fd<0||fd>=OPEN_MAX) || (filetable->filetable[fd]==NULL)){ //check if fd is valid and file is not null
         lock_release(filetable->lk_ft);
-        return EBADF; 
+        return EBADF;                             //wrong fd or file is null
     }else{
-       file=filetable->filetable[fd]; 
+       file=filetable->filetable[fd];               //retrieve the file from the filetable if valid
     }
     lock_acquire(file->lk_file);
     lock_release(filetable->lk_ft);
     off_t seek_pos;
 
-    if(VOP_ISSEEKABLE(file->vn)){
-        if(whence==SEEK_SET){    
-            seek_pos=pos;
-        }else if(whence==SEEK_CUR){
+    if(VOP_ISSEEKABLE(file->vn)){ 
+        if(whence==SEEK_SET){            //If whence is SEEK_SET, the file offset shall be set to offset bytes.    
+            seek_pos=pos; 
+        }else if(whence==SEEK_CUR){      //If whence is SEEK_CUR, the file offset shall be set to its current location plus offset.
             seek_pos=file->offs+pos;
-        }else if(whence==SEEK_END){
+        }else if(whence==SEEK_END){         //If whence is SEEK_END, the file offset shall be set to the size of the file plus offset.
             info=kmalloc(sizeof(struct stat));
             int lseek=VOP_STAT(file->vn, info);
             if(!lseek){
@@ -216,22 +216,23 @@ lseek(int fd, off_t pos, int whence, int32_t*retval1, int32_t *retval2){
             return EINVAL;
         }
 
-        if(seek_pos<0){
+        if(seek_pos<0){               //resulting file offset would be negative for a regular file, block special file, or directory.
             lock_release(file->lk_file);
             return EINVAL;
         }
 
-        file->offs=seek_pos;
+        file->offs=seek_pos;     
 
         lock_release(file->lk_file);
-        *retval1 = seek_pos >> 32;
-        *retval2 = seek_pos & 0xFFFFFFFF;
+        *retval1 = seek_pos >> 32;      //high 32 bits
+        *retval2 = seek_pos & 0xFFFFFFFF;  //low 32 bits
 
         return 0;
 
 
     }else{
-        lock_release(file->lk_file);
+        lock_release(file->lk_file);      //The fildes argument is associated with a pipe, FIFO, or socket.
+
         return ESPIPE;
     }
     

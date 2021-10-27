@@ -73,7 +73,7 @@ int ft_init(struct ft*filetable){
 
 
 }
-
+//create a new file
 struct file* file_create(struct vnode*vn){
     struct file *file;
     file=kmalloc(sizeof(struct file));
@@ -89,7 +89,7 @@ struct file* file_create(struct vnode*vn){
 
 }
 
-
+//destroy the filetable
 void file_destroy(struct ft* filetable){
     KASSERT(filetable!=NULL);
     lock_destroy(filetable->lk_ft);
@@ -113,7 +113,7 @@ struct ft* filetable_create(void){
     return filetable;
 
 }
-
+//add a new file into the filetable
 int new_file(struct ft* filetable, struct file* file, int *fd){
     for(int i=3; i<OPEN_MAX; i++){
         if(filetable->filetable[i]==NULL){

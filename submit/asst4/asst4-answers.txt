@@ -58,8 +58,7 @@ line 85 of syscalls-mips.S: beq a3, $0, 1f
 
 14
 ===========================================================
-File handle(arg0) is in a0. Offset arg should be in a2 or a3. Return value is in v0/v1.
-
+File handle(arg0) is in a0. Offset arg should be in a2 and a3. Whence is in user stack (sp+16). Return value is stored in retval1 and retvala2.
 15
 ===========================================================
 vfs_open() to open the file
