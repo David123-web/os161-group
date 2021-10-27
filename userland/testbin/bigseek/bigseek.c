@@ -220,7 +220,6 @@ main(void)
 	if (fd < 0) {
 		err(1, "%s", TESTFILE);
 	}
-
 	printf("Writing something at offset 0\n");
 	write_slogan(fd, 0, false);
 	cursize = strlen(slogans[0]);

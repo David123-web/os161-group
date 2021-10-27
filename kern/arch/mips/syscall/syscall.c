@@ -124,11 +124,11 @@ syscall(struct trapframe *tf)
 		break;
 
 		case SYS_write:
-		err =  write((int)tf->tf_a0, (const void *) tf->tf_a1, (size_t)tf->tf_a2, &retval1);
+		err =  write((int)tf->tf_a0, (userptr_t) tf->tf_a1, (size_t)tf->tf_a2, &retval1);
 		break;
 
 		case SYS_read:
-		err = read((int)tf->tf_a0, (void *)tf->tf_a1, (size_t)tf->tf_a2, &retval1);
+		err = read((int)tf->tf_a0, (userptr_t)tf->tf_a1, (size_t)tf->tf_a2, &retval1);
 
 		case SYS_lseek: ;
 		int whence;

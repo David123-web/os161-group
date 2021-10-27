@@ -75,7 +75,8 @@ int ft_init(struct ft*filetable){
 }
 
 struct file* file_create(struct vnode*vn){
-    struct file *file=kmalloc(sizeof(struct file));
+    struct file *file;
+    file=kmalloc(sizeof(struct file));
     if(file==NULL){
         return NULL;
     }
@@ -91,14 +92,14 @@ struct file* file_create(struct vnode*vn){
 
 void file_destroy(struct ft* filetable){
     KASSERT(filetable!=NULL);
-
     lock_destroy(filetable->lk_ft);
     kfree(filetable);
 }
 
 
 struct ft* filetable_create(void){
-    struct ft *filetable=kmalloc(sizeof(struct ft));
+    struct ft *filetable;
+    filetable=kmalloc(sizeof(struct ft));
 
     if(filetable!=NULL){
         filetable->lk_ft=lock_create("");
@@ -133,7 +134,10 @@ int new_file(struct ft* filetable, struct file* file, int *fd){
 *Assign a new file descriptor 
 */
 void addNewFd(struct ft * ft, struct file * item, int fd){
+    KASSERT(ft!=NULL);
+    KASSERT(item!= NULL);
     KASSERT(fd >= 0 && fd < OPEN_MAX );
+    KASSERT(ft->filetable[fd]==NULL);
     ft->filetable[fd] = item;
     lock_acquire(item->lk_file);
     KASSERT(item != NULL );

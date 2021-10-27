@@ -11,9 +11,9 @@
 
 int open(const char *, int, int32_t *);
 
-int write(int, const void *, size_t, int32_t *);
+int write(int, userptr_t, size_t, int32_t *);
 
-int read(int, void *, size_t , int32_t *);
+int read(int, userptr_t, size_t , int32_t *);
 
 int lseek(int, off_t, int , int32_t*, int32_t *);
 

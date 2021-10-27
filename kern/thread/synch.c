@@ -77,7 +77,6 @@ void
 sem_destroy(struct semaphore *sem)
 {
         KASSERT(sem != NULL);
-
 	/* wchan_cleanup will assert if anyone's waiting on it */
 	spinlock_cleanup(&sem->sem_lock);
 	wchan_destroy(sem->sem_wchan);
@@ -177,9 +176,8 @@ lock_create(const char *name)
 void
 lock_destroy(struct lock *lock)
 {
-        KASSERT(lock != NULL);
-
-	KASSERT(lock->lk_holder == NULL);
+    KASSERT(lock != NULL);
+	KASSERT(lock->lk_holder != NULL);
 	spinlock_cleanup(&lock->lk_lock);
 	wchan_destroy(lock->lk_wchan);
 

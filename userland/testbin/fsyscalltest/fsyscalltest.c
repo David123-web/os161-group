@@ -358,10 +358,10 @@ dir_test()
  */
 int
 main()
-{
+{	
 	test_openfile_limits();
 	printf("Passed Part 1 of fsyscalltest\n");
-
+	
 	simple_test();
 	printf("Passed Part 2 of fsyscalltest\n");
 	
