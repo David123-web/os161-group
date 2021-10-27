@@ -191,6 +191,7 @@ lseek(int fd, off_t pos, int whence, int32_t*retval1, int32_t *retval2){
         lock_release(filetable->lk_ft);
         return EBADF;                             //wrong fd or file is null
     }else{
+        
        file=filetable->filetable[fd];               //retrieve the file from the filetable if valid
     }
     lock_acquire(file->lk_file);
