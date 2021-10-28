@@ -12,10 +12,10 @@
 struct file* file_create(struct vnode*);
 //initialize the filetable
 int ft_init(struct ft*filetable){
-    struct vnode *vn=NULL;
-    char *cons1=NULL;
-    char *cons2=NULL;
-    char *cons3=NULL;
+    struct vnode *vn;
+    char *cons1;
+    char *cons2;
+    char *cons3;
     
     int success;
 
@@ -40,7 +40,7 @@ int ft_init(struct ft*filetable){
     //STDOUT
     struct vnode *vn1;
     cons2=kstrdup("con:");
-    success=vfs_open(cons2, O_WRONLY, 1,&vn1);
+    success=vfs_open(cons2, O_WRONLY, 0,&vn1);
     if(success){
         return success;
     }
@@ -56,7 +56,7 @@ int ft_init(struct ft*filetable){
     //STDERR
     struct vnode *vn2;
     cons3=kstrdup("con:");
-    success=vfs_open(cons3, O_WRONLY, 2,&vn2);
+    success=vfs_open(cons3, O_WRONLY, 0,&vn2);
     if(success){
         return success;
     }
@@ -114,14 +114,11 @@ struct ft* filetable_create(void){
 
 }
 //add a new file into the filetable
-int new_file(struct ft* filetable, struct file* file, int *fd){
+int new_file(struct ft* filetable, struct file* file, int32_t *fd){
     for(int i=3; i<OPEN_MAX; i++){
         if(filetable->filetable[i]==NULL){
             KASSERT(i>=0&&i<OPEN_MAX);
-            filetable->filetable[i]=file;
-            lock_acquire(file->lk_file);
-            file->refcount++;
-            lock_release(file->lk_file);
+            addNewFd(filetable, file, i);
             *fd=i;
             return 0;
         }
