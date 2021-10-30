@@ -29,7 +29,8 @@ struct ft {
 struct ft *filetable_create(void);
 int ft_init(struct ft*);
 void file_destroy(struct ft*);
-int new_file(struct ft*, struct file*, int *);
+int new_file(struct ft*, struct file*, int32_t *);
+
 
 void decre_file(struct file * f, bool b);
 void addNewFd(struct ft * ft, struct file * item, int fd);

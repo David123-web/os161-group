@@ -20,27 +20,33 @@ struct file* file_create(struct vnode*); //first define the file_create function
 //open files with given flags
 int
 open(const char *filename, int flags, int32_t *retval){
-    struct vnode *vn=NULL;
+    struct vnode *vn;
     char *name;
     name=kmalloc(PATH_MAX);
-    size_t *length;
-    length=kmalloc(sizeof(size_t));
+    size_t length;
     struct ft *filetable=curproc->proc_ft;
     
     //copy the pathname from userspace ot kernel space
-    int copystr=copyinstr((const_userptr_t)filename, name, PATH_MAX, length);
+    int copystr=copyinstr((const_userptr_t)filename, name, PATH_MAX, &length);
     if(copystr){        //check if the string copied is valid, if not return the error message
-        kfree(length);
         kfree(name);
+
         return copystr;
     }
 
     int open=vfs_open(name, flags, 0 ,&vn); //mode dont care
-        kfree(length);
-        kfree(name);
-    if(!open){          //check of the file is open or not
+    struct file *f=file_create(vn);
+    if(f==NULL){
+        return ENOMEM;
+    }
+    
+    kfree(name);
+
+    
+    int pass=0;
+    if(open==pass){          //check of the file is open or not
         struct file *file=file_create(vn);
-        file->flag=flags;
+        
         
         if(file==NULL){    //The available data space is not large enough to accommodate creating a new file
             return ENOMEM;
@@ -48,17 +54,20 @@ open(const char *filename, int flags, int32_t *retval){
 
         if(flags & O_APPEND){   //causes all writes to the file to occur at the end of file
             struct stat *stat;
-            stat=kmalloc(sizeof(struct stat)); 
-            VOP_STAT(file->vn, stat);               //get the file size using stat
-            file->offs=stat->st_size;    
+            stat=kmalloc(sizeof(struct stat));
+            if(stat==NULL){
+                return ENOMEM;
+            }
+            VOP_STAT(file->vn, stat);
+            file->offs=stat->st_size;    //get the file size using stat
             kfree(stat);
-        }
-
+        } 
+        file->flag=flags;
+        
         lock_acquire(filetable->lk_ft);
         open=new_file(filetable, file, retval);     //add the new file into the filetable
         lock_release(filetable->lk_ft);
-       
-        int pass=0;
+
         if(open){
             return open;
         }else{
@@ -90,7 +99,7 @@ write(int fd, userptr_t buf, size_t nbytes, int32_t *retval1){
     
     lock_acquire(file->lk_file);
     lock_release(filetable->lk_ft);
-    if(file->flag & O_RDONLY){ //check fd is not a valid file descriptor, or was not opened for writing.
+    if(!(file->flag & O_WRONLY||file->flag & O_RDWR)){ //check fd is not a valid file descriptor, or was not opened for writing.
         lock_release(file->lk_file);
         return EBADF;
     }
@@ -108,11 +117,12 @@ write(int fd, userptr_t buf, size_t nbytes, int32_t *retval1){
 
     int pass=0;
     int isWrite=VOP_WRITE(file->vn, &control);      //VOP_WRITE does most of the job for wirte
-    if(isWrite==pass){                                               
+    if(isWrite==pass){
+                                                
         file->offs=control.uio_offset;                                               //update the offset to the new uio_offset after write
         lock_release(file->lk_file);
-        //*retval1=length;
-        *retval1=nbytes-control.uio_resid;                      //the amount of read is the amount of the readbytes minus how much left in the buffer
+        *retval1=nbytes - control.uio_resid;;
+        //*retval1=nbytes-control.uio_resid;                      //the amount of read is the amount of the readbytes minus how much left in the buffer
         return pass;
     }else{
         lock_release(file->lk_file);
@@ -152,7 +162,7 @@ read(int fd, userptr_t buf, size_t buflen, ssize_t *retval1){
     
 
     track.iov_len=buflen;
-    track.iov_ubase=buf;
+    track.iov_ubase= buf;
     control.uio_space=curproc->p_addrspace;
     control.uio_iovcnt=1;
     control.uio_iov=&track;
@@ -165,9 +175,12 @@ read(int fd, userptr_t buf, size_t buflen, ssize_t *retval1){
     int pass=0;
     int isRead=VOP_READ(file->vn, &control);
     if(isRead==pass){
-        file->offs =control.uio_offset;  //update file offset to new offset
+        
+       //update file offset to new offset
+        file->offs=control.uio_offset;   
         lock_release(file->lk_file);
         *retval1= buflen-control.uio_resid;       //calculate how much has been read
+    
         return pass;
     }else{
         lock_release(file->lk_file);
@@ -196,8 +209,9 @@ lseek(int fd, off_t pos, int whence, int32_t*retval1, int32_t *retval2){
     }
     lock_acquire(file->lk_file);
     lock_release(filetable->lk_ft);
-    off_t seek_pos;
 
+    off_t seek_pos;
+   
     if(VOP_ISSEEKABLE(file->vn)){ 
         if(whence==SEEK_SET){            //If whence is SEEK_SET, the file offset shall be set to offset bytes.    
             seek_pos=pos; 
@@ -206,8 +220,9 @@ lseek(int fd, off_t pos, int whence, int32_t*retval1, int32_t *retval2){
         }else if(whence==SEEK_END){         //If whence is SEEK_END, the file offset shall be set to the size of the file plus offset.
             info=kmalloc(sizeof(struct stat));
             int lseek=VOP_STAT(file->vn, info);
-            if(!lseek){
-                seek_pos=info->st_size+pos;
+            if(lseek==0){
+            seek_pos=info->st_size+pos;
+            kfree(info);
             }else{
                 lock_release(file->lk_file);
                 return lseek;
@@ -233,7 +248,6 @@ lseek(int fd, off_t pos, int whence, int32_t*retval1, int32_t *retval2){
 
     }else{
         lock_release(file->lk_file);      //The fildes argument is associated with a pipe, FIFO, or socket.
-
         return ESPIPE;
     }
     
@@ -263,7 +277,7 @@ Make a duplicate copy of the old file into the new file
 @param newFile  file to be copied to
 @return 0 if successfully duplicate the file else EBADF
 */
-int dup2(int oldFile, int newFile, int *out){   
+int dup2(int oldFile, int newFile, int32_t  *out){   
     struct ft *ft = curproc->proc_ft;
     struct file *fileItem;
 
@@ -297,24 +311,21 @@ int chdir(const char *name)
 {   
     int error;
     char *route;
-    size_t *len;
-    int output = vfs_chdir((char*)name);
+    size_t len;
     
-    len = kmalloc(sizeof(int));
     route = kmalloc(PATH_MAX);
-    error = copyinstr((const_userptr_t) name, route, PATH_MAX, len);   //copy string to kernel space address
-
+    error = copyinstr((const_userptr_t) name, route, PATH_MAX, &len);   //copy string to kernel space address
+    
+    
     if (!error){
-      kfree(route);                                       //free the old space
-      kfree(len);
-
+      kfree(route);                                      //free the old space
+    int output = vfs_chdir((char*)name);
     if (output) { return output; }
 
     return 0;
     }
-      kfree(route);
-      kfree(len);
-      return error;
+    kfree(route);
+    return error;
 }
 
 

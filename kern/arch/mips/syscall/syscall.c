@@ -39,7 +39,6 @@
 #include <copyinout.h>
 #include <kern/wait.h>
 #include <vm.h>
-#include <syscall.h>
 #include <fsystemcalls.h>
 
 
@@ -88,7 +87,7 @@ syscall(struct trapframe *tf)
 	
 	int32_t retval1;
 	int32_t retval2;
-	int err;
+	int err=0;
 
 	KASSERT(curthread != NULL);
 	KASSERT(curthread->t_curspl == 0);
@@ -105,8 +104,9 @@ syscall(struct trapframe *tf)
 	 * like write.
 	 */
 
-	retval1 = 0;
+	retval1 =0;
 	retval2 =0;
+	
 
 	switch (callno) {
 	    case SYS_reboot:
@@ -129,7 +129,8 @@ syscall(struct trapframe *tf)
 
 		case SYS_read:
 		err = read((int)tf->tf_a0, (userptr_t)tf->tf_a1, (size_t)tf->tf_a2, &retval1);
-
+		break;
+		
 		case SYS_lseek: ;
 		int whence;
 		whence=0; 

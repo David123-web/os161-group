@@ -43,6 +43,7 @@
 #include <test.h>
 #include "opt-sfs.h"
 #include "opt-net.h"
+#include <synch.h>
 
 /*
  * In-kernel menu and command dispatcher.
@@ -130,6 +131,9 @@ common_prog(int nargs, char **args)
 		proc_destroy(proc);
 		return result;
 	}
+
+	//struct semaphore *sem1 = sem_create("", 0);
+ 	//P(sem1);
 
 	/*
 	 * The new process will be destroyed when the program exits...
@@ -700,5 +704,7 @@ menu(char *args)
 		kprintf("OS/161 kernel [? for menu]: ");
 		kgets(buf, sizeof(buf));
 		menu_execute(buf, 0);
+
+		while(1);
 	}
 }

@@ -109,6 +109,7 @@ check_slogan(int fd, unsigned which)
 
 	/* we should get either a full buffer or the length of the slogan */
 	len = strlen(slogans[which]);
+	kprint(""slogan[which])
 	if ((size_t)r != sizeof(buf) && (size_t)r != len) {
 		errx(1, "read: result %zd bytes, expected %zu or %zu",
 		     r, sizeof(buf), len);

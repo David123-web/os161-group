@@ -11,4 +11,5 @@ menu.o: ../../main/menu.c ../../include/types.h \
  ../../include/setjmp.h includelinks/kern/machine/setjmp.h \
  ../../include/proc.h ../../include/vfs.h ../../include/sfs.h \
  ../../include/fs.h ../../include/vnode.h ../../include/kern/sfs.h \
- ../../include/syscall.h ../../include/test.h opt-sfs.h opt-net.h
+ ../../include/syscall.h ../../include/test.h opt-sfs.h opt-net.h \
+ ../../include/synch.h ../../include/cpu.h includelinks/machine/vm.h

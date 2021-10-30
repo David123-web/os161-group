@@ -1,29 +1,29 @@
 #include<types.h>
 #include<lib.h> //
 #include<filetable.h> //
-#include<limits.h>
 #include <kern/errno.h> //
 #include <fsystemcalls.h> //
-#include <vnode.h>
 #include <vfs.h> //
 #include <kern/fcntl.h> //
-#include <synch.h>
 
 struct file* file_create(struct vnode*);
+//static int init_std_io(struct ft *, int , int);
 //initialize the filetable
+
 int ft_init(struct ft*filetable){
+    KASSERT(filetable!=NULL);
+
     struct vnode *vn;
-    char *cons1;
-    char *cons2;
-    char *cons3;
+    const char *cons1="con:";
+    const char *cons2="con:";
+    const char *cons3="con:";
     
     int success;
 
     KASSERT(filetable!=NULL);
 
     //STDIN
-    cons1=kstrdup("con:");
-    success=vfs_open(cons1, O_RDONLY, 0,&vn);
+    success=vfs_open(kstrdup(cons1), O_RDONLY, 0,&vn);
     if(success){
        return success;
     }
@@ -39,8 +39,7 @@ int ft_init(struct ft*filetable){
     
     //STDOUT
     struct vnode *vn1;
-    cons2=kstrdup("con:");
-    success=vfs_open(cons2, O_WRONLY, 0,&vn1);
+    success=vfs_open(kstrdup(cons2), O_WRONLY, 0,&vn1);
     if(success){
         return success;
     }
@@ -56,7 +55,7 @@ int ft_init(struct ft*filetable){
     //STDERR
     struct vnode *vn2;
     cons3=kstrdup("con:");
-    success=vfs_open(cons3, O_WRONLY, 0,&vn2);
+    success=vfs_open(kstrdup(cons3), O_WRONLY, 0,&vn2);
     if(success){
         return success;
     }
@@ -73,6 +72,7 @@ int ft_init(struct ft*filetable){
 
 
 }
+
 //create a new file
 struct file* file_create(struct vnode*vn){
     struct file *file;
@@ -96,7 +96,7 @@ void file_destroy(struct ft* filetable){
     kfree(filetable);
 }
 
-
+//create a new filetable
 struct ft* filetable_create(void){
     struct ft *filetable;
     filetable=kmalloc(sizeof(struct ft));
