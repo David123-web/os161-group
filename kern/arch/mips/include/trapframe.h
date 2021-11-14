@@ -30,6 +30,7 @@
 #ifndef _MIPS_TRAPFRAME_H_
 #define _MIPS_TRAPFRAME_H_
 
+#include <cdefs.h>
 /*
  * Structure describing what is saved on the stack during entry to
  * the exception handler.

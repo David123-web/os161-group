@@ -11,6 +11,7 @@ syscall.o: ../../arch/mips/syscall/syscall.c ../../include/types.h \
  ../../include/proc.h ../../include/addrspace.h ../../include/vm.h \
  includelinks/machine/vm.h opt-dumbvm.h ../../include/copyinout.h \
  ../../include/kern/wait.h ../../include/fsystemcalls.h \
- ../../include/filetable.h ../../include/synch.h ../../include/cpu.h \
- ../../include/limits.h ../../include/kern/limits.h ../../include/vnode.h \
- ../../include/kern/seek.h
+ ../../include/filetable.h ../../include/limits.h \
+ ../../include/kern/limits.h ../../include/kern/seek.h \
+ ../../include/endian.h ../../include/kern/endian.h \
+ includelinks/kern/machine/endian.h

@@ -330,8 +330,10 @@ file      thread/threadlist.c
 # Process system
 #
 
+file      proc/openfile.c
 file      proc/proc.c
 file      proc/filetable.c
+file      proc/pid.c
 
 #
 # Virtual memory system
@@ -378,6 +380,7 @@ file      syscall/loadelf.c
 file      syscall/runprogram.c
 file      syscall/time_syscalls.c
 file      syscall/fsystemcalls.c
+file      syscall/psyscall.c
 
 #
 # Startup and initialization

@@ -48,10 +48,12 @@
 #include <current.h>
 #include <addrspace.h>
 #include <vnode.h>
+#include <pid.h>
 #include <filetable.h>
 #include <limits.h>
 #include <kern/errno.h>
 #include <fsystemcalls.h>
+
 
 /*
  * The process for the kernel; this holds all the kernel-only threads.
@@ -61,7 +63,6 @@ struct proc *kproc;
 /*
  * Create a proc structure.
  */
-static
 struct proc *
 proc_create(const char *name)
 {
@@ -77,12 +78,12 @@ proc_create(const char *name)
 		return NULL;
 	}
 
-	proc->proc_ft=filetable_create(); //create the filetable when new process occurs
-	if(proc->proc_ft==NULL){
-		kfree(proc);
-		return NULL;
-	}
-
+	//proc->proc_ft=filetable_create(); //create the filetable when new process occurs
+	//if(proc->proc_ft==NULL){
+	//	kfree(proc);
+    //		return NULL;
+	//}
+	proc->p_pid=INVALID_PID; //?
 	threadarray_init(&proc->p_threads);
 	spinlock_init(&proc->p_lock);
 
@@ -91,6 +92,7 @@ proc_create(const char *name)
 
 	/* VFS fields */
 	proc->p_cwd = NULL;
+	proc->proc_ft=NULL;
 
 	return proc;
 }
@@ -126,6 +128,7 @@ proc_destroy(struct proc *proc)
 		VOP_DECREF(proc->p_cwd);
 		proc->p_cwd = NULL;
 	}
+	
 
 	/* VM fields */
 	if (proc->p_addrspace) {
@@ -174,8 +177,14 @@ proc_destroy(struct proc *proc)
 		}
 		as_destroy(as);
 	}
+	//destroy filetable
+	if(proc->proc_ft){
+		filetable_destroy(proc->proc_ft); 
+		proc->proc_ft=NULL; 
+	}
 
-	file_destroy(proc->proc_ft);  
+	KASSERT(proc->p_pid==INVALID_PID); 
+
 
 	threadarray_cleanup(&proc->p_threads);
 	spinlock_cleanup(&proc->p_lock);
@@ -194,6 +203,7 @@ proc_bootstrap(void)
 	if (kproc == NULL) {
 		panic("proc_create for kproc failed\n");
 	}
+	kproc->p_pid=KERNEL_PID; 
 }
 
 /*
@@ -202,22 +212,29 @@ proc_bootstrap(void)
  * It will have no address space and will inherit the current
  * process's (that is, the kernel menu's) current directory.
  */
-struct proc *
-proc_create_runprogram(const char *name)
+
+int proc_create_runprogram(const char *name, struct proc **retval)
 {
 	struct proc *newproc;
+	int res;
 	
 
 	newproc = proc_create(name);
 	if (newproc == NULL) {
-		return NULL;
+		return  ENOMEM;
 	}
 
-	if(ft_init(newproc->proc_ft)){  //intialize the filetable and add the three default descriptors
-		kfree(newproc);
-		return NULL;
-	}
 
+	//if(ft_init(newproc->proc_ft)){  //intialize the filetable and add the three default descriptors
+	//	kfree(newproc);
+	//	return NULL;
+	//}
+
+	res=pid_allocate(&newproc->p_pid);
+    if(res){
+		proc_destroy(newproc);
+		return res;
+	}
 
 	/* VM fields */
 
@@ -237,7 +254,9 @@ proc_create_runprogram(const char *name)
 	}
 	spinlock_release(&curproc->p_lock);
 
-	return newproc;
+	*retval=newproc;
+
+	return 0;
 }
 
 /*

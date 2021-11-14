@@ -44,6 +44,8 @@
 #include "opt-sfs.h"
 #include "opt-net.h"
 #include <synch.h>
+#include <kern/wait.h>
+#include <pid.h>
 
 /*
  * In-kernel menu and command dispatcher.
@@ -91,10 +93,17 @@ cmd_progthread(void *ptr, unsigned long nargs)
 	if (result) {
 		kprintf("Running program %s failed: %s\n", args[0],
 			strerror(result));
+
+		p_exit(_MKWAIT_EXIT(1));
+		thread_exit();
 		return;
 	}
-
 	/* NOTREACHED: runprogram only returns on error. */
+	KASSERT(result!=0);
+
+	
+
+
 }
 
 /*
@@ -116,22 +125,41 @@ common_prog(int nargs, char **args)
 	struct proc *proc;
 	int result;
 
-	/* Create a process for the new program to run in. */
-	proc = proc_create_runprogram(args[0] /* name */);
-	if (proc == NULL) {
-		return ENOMEM;
-	}
+	pid_t c_pid;
+	int stat;
 
-	result = thread_fork(args[0] /* thread name */,
+
+	
+	/* Create a process for the new program to run in. */
+	result = proc_create_runprogram(args[0] /* name */, &proc);
+	if (!result) {
+		c_pid=proc->p_pid;
+		result = thread_fork(args[0] /* thread name */,
 			proc /* new process */,
 			cmd_progthread /* thread function */,
 			args /* thread arg */, nargs /* thread arg */);
-	if (result) {
-		kprintf("thread_fork failed: %s\n", strerror(result));
-		proc_destroy(proc);
+		if (result) {
+			kprintf("thread_fork failed: %s\n", strerror(result));
+			proc_destroy(proc);
+			return result;
+		}
+
+		pid_wait(c_pid, & stat, 0, NULL);
+
+		if(WIFSIGNALED(stat)){
+			kprintf("pid %d exits on signal %d\n", c_pid, WTERMSIG(stat));
+		}else if(WIFEXITED(stat)){
+			kprintf("pid %d exits, status %d\n", c_pid, WEXITSTATUS(stat));
+
+		}else{
+			kprintf("pid %d exits, uncommon status %d\n", c_pid, stat);
+		}
+
+	}else{
 		return result;
 	}
 
+	
 	//struct semaphore *sem1 = sem_create("", 0);
  	//P(sem1);
 
@@ -705,6 +733,6 @@ menu(char *args)
 		kgets(buf, sizeof(buf));
 		menu_execute(buf, 0);
 
-		while(1);
+		//while(1);
 	}
 }

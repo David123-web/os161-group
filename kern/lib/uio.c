@@ -167,18 +167,22 @@ uio_kinit(struct iovec *iov, struct uio *u,
 /*
  * Convenience function to initialize an iovec and uio for user I/O.
  */
-/*
+
+
 void
-uio_uinit(struct iovec *iov, struct uio *u, char *ubuf, size_t len, off_t pos, enum uio_rw rw) {
-	iov->iov_ubase = (userptr_t) ubuf;
+uio_uinit(struct iovec *iov, struct uio *u,
+	  userptr_t buf, size_t len, off_t offset, enum uio_rw rw)
+{
+	DEBUGASSERT(iov != NULL);
+	DEBUGASSERT(u != NULL);
+
+	iov->iov_ubase = buf;
 	iov->iov_len = len;
 	u->uio_iov = iov;
 	u->uio_iovcnt = 1;
-	u->uio_offset = pos;
+	u->uio_offset = offset;
 	u->uio_resid = len;
 	u->uio_segflg = UIO_USERSPACE;
 	u->uio_rw = rw;
-	u->uio_space = curproc->p_addrspace;
-	
+	u->uio_space = proc_getas();
 }
-*/

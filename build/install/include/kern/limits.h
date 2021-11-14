@@ -105,5 +105,8 @@
 /* Max number of iovec structures at once for readv/writev/preadv/pwritev */
 #define __IOV_MAX       1024
 
+/* MAX number of process on the system at once*/
+
+#define __PROCS_MAX     128
 
 #endif /* _KERN_LIMITS_H_ */

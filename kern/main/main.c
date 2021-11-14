@@ -50,6 +50,7 @@
 #include <test.h>
 #include <version.h>
 #include "autoconf.h"  // for pseudoconfig
+#include <pid.h>
 
 
 /*
@@ -109,9 +110,11 @@ boot(void)
 	ram_bootstrap();
 	proc_bootstrap();
 	thread_bootstrap();
+	pid_init(); // initialize pid
 	hardclock_bootstrap();
 	vfs_bootstrap();
 	kheap_nextgeneration();
+
 
 	/* Probe and initialize devices. Interrupts should come on. */
 	kprintf("Device probe...\n");
@@ -126,6 +129,7 @@ boot(void)
 	/* Late phase of initialization. */
 	vm_bootstrap();
 	kprintf_bootstrap();
+	exec_start();
 	thread_start_cpus();
 
 	/* Default bootfs - but ignore failure, in case emu0 doesn't exist */

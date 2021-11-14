@@ -50,6 +50,10 @@
 #include <addrspace.h>
 #include <mainbus.h>
 #include <vnode.h>
+//#include <pid.h>
+//#include <kern/wait.h>
+//#include <limits>
+
 
 
 /* Magic number used as a guard value on kernel thread stacks. */
@@ -788,6 +792,7 @@ thread_exit(void)
 
 	/* Make sure we *are* detached (move this only if you're sure!) */
 	KASSERT(cur->t_proc == NULL);
+
 
 	/* Check the stack guard band. */
 	thread_checkstack(cur);

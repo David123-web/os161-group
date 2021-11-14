@@ -32,6 +32,7 @@
 
 
 #include <cdefs.h> /* for __DEAD */
+#include <proc.h>
 struct trapframe; /* from <machine/trapframe.h> */
 
 /*
@@ -51,12 +52,26 @@ void enter_forked_process(struct trapframe *tf);
 __DEAD void enter_new_process(int argc, userptr_t argv, userptr_t env,
 		       vaddr_t stackptr, vaddr_t entrypoint);
 
-
+//start up function for execv
+void exec_start(void);
 /*
  * Prototypes for IN-KERNEL entry points for system call implementations.
  */
 
 int sys_reboot(int code);
 int sys___time(userptr_t user_seconds, userptr_t user_nanoseconds);
+
+
+//assignment 5
+int getpid(pid_t *ret);
+int fork(struct trapframe *itf, pid_t *ret);
+int execv(userptr_t program, userptr_t args);
+int waitpid(pid_t pid, userptr_t ret_st, int flags, pid_t *ret_val);
+
+int p_fork(struct proc **retval);
+void p_unfork(struct proc *nproc);
+void p_exit(int st);
+
+__DEAD void exit(int status);
 
 #endif /* _SYSCALL_H_ */

@@ -7,22 +7,14 @@
 #include<lib.h>
 
 //usersystem calls
+int open(const_userptr_t filename, int flags, mode_t mode, int *retval);
+int dup2(int oldfd, int newfd, int *retval);
+int close(int fd);
+int read(int fd, userptr_t buf, size_t size, int *retval);
+int write(int fd, userptr_t buf, size_t size, int *retval);
+int lseek(int fd, off_t offset, int code, off_t *retval);
 
-
-int open(const char *, int, int32_t *);
-
-int write(int, userptr_t, size_t, int32_t *);
-
-int read(int, userptr_t, size_t , ssize_t *);
-
-int lseek(int, off_t, int , int32_t*, int32_t *);
-
-int close(int);
-
-int dup2(int, int, int32_t*);
-
-int chdir(const char*);
-
-int __getcwd(char*, size_t, int32_t*);
+int chdir(const_userptr_t path);
+int __getcwd(userptr_t buf, size_t buflen, int *retval);
 
 #endif

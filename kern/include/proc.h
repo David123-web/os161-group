@@ -57,7 +57,8 @@ struct proc {
 	struct vnode *p_cwd;		/* current working directory */
 
 	/* add more material here as needed */
-	struct ft *proc_ft;       //current proccess's filetable
+	struct filetable *proc_ft;       //current proccess's filetable
+	pid_t p_pid;    //process id
 };
 
 /* This is the process structure for the kernel and for kernel-only threads. */
@@ -66,8 +67,10 @@ extern struct proc *kproc;
 /* Call once during system startup to allocate data structures. */
 void proc_bootstrap(void);
 
+struct proc *proc_create(const char *name);
+
 /* Create a fresh process for use by runprogram(). */
-struct proc *proc_create_runprogram(const char *name);
+int proc_create_runprogram(const char *name, struct proc **retval);
 
 /* Destroy a process. */
 void proc_destroy(struct proc *proc);
