@@ -221,7 +221,7 @@ int pid_wait(pid_t inputPid, int *st, int flags, pid_t *retv) {
 	}
 
 	if (inputPid == curproc->p_pid) {             //avoid deadlock
-		return EINVAL;
+		return ECHILD;
 	}
 
 	lock_acquire(p_lk);
@@ -236,7 +236,7 @@ int pid_wait(pid_t inputPid, int *st, int flags, pid_t *retv) {
 
 	if (inputPidInfo->p_id != curproc->p_pid) {        //Allow waiting for our own children pid. 
 		lock_release(p_lk);
-		return EPERM;
+		return ECHILD;
 	}
 
 	if (inputPidInfo->exited == false) {
