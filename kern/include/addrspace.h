@@ -1,31 +1,3 @@
-/*
- * Copyright (c) 2000, 2001, 2002, 2003, 2004, 2005, 2008, 2009
- *	The President and Fellows of Harvard College.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE UNIVERSITY AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE UNIVERSITY OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- */
 
 #ifndef _ADDRSPACE_H_
 #define _ADDRSPACE_H_
@@ -34,12 +6,25 @@
  * Address space structure and operations.
  */
 
-
 #include <vm.h>
 #include "opt-dumbvm.h"
 
 struct vnode;
 
+/* Initalize pagetable */
+#define INITIAL_SIZE 64
+struct pt_entry {                      
+    int pt_flag;                                    
+    paddr_t pt_paddr;      // physical address 
+    vaddr_t pt_vaddr;      // virtual address 
+};
+
+struct region {
+    paddr_t as_pbase;
+    vaddr_t as_vbase;
+    int region_flag;
+    size_t as_npages;
+};
 
 /*
  * Address space - data structure associated with the virtual memory
@@ -47,18 +32,24 @@ struct vnode;
  *
  * You write this.
  */
-
 struct addrspace {
 #if OPT_DUMBVM
-        vaddr_t as_vbase1;
-        paddr_t as_pbase1;
-        size_t as_npages1;
-        vaddr_t as_vbase2;
-        paddr_t as_pbase2;
-        size_t as_npages2;
-        paddr_t as_stackpbase;
+    vaddr_t as_vbase1;
+    paddr_t as_pbase1;
+    size_t as_npages1;
+    vaddr_t as_vbase2;
+    paddr_t as_pbase2;
+    size_t as_npages2;
+    paddr_t as_stackpbase;
 #else
-        /* Put stuff here for your VM system */
+    struct region *rlist;    //more regions instead of two
+
+    vaddr_t stack_start, stack_end;   //growing stack
+
+    vaddr_t heap_start, heap_end;   //growing heap
+
+    struct pt_entry *as_pages;
+
 #endif
 };
 
@@ -128,5 +119,10 @@ int               as_define_stack(struct addrspace *as, vaddr_t *initstackptr);
 
 int load_elf(struct vnode *v, vaddr_t *entrypoint);
 
+//A6 added here
+struct pt_entry *pt_create(size_t size);   //initialize pagetable
+struct pt_entry *get_pt(struct addrspace *as, vaddr_t vaddr);   //get pagetable pointer
+void pt_free(struct pt_entry *pt);      //free pagetable
+struct pt_entry *pt_resize(struct pt_entry *pt, size_t prevSize); //resize pagetable
 
 #endif /* _ADDRSPACE_H_ */

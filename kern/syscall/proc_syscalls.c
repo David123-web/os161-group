@@ -43,6 +43,7 @@
 #include <copyinout.h>
 #include <pid.h>
 #include <syscall.h>
+#include <addrspace.h>
 
 /* note that sys_execv is in runprogram.c */
 
@@ -157,3 +158,44 @@ sys_waitpid(pid_t pid, userptr_t retstatus, int flags, pid_t *retval)
 	}
 	return result;
 }
+
+/*
+ * sys_sbrk
+ * Get more heap space using given amount
+ */
+
+int sys_sbrk(intptr_t increase, int *retval){
+    struct addrspace *adds = proc_getas();
+    vaddr_t end = adds->heap_end;
+
+    if(increase < 0) {
+        if(adds->heap_end + increase < adds->heap_start) {       //check if amount is in valid region
+		     return EINVAL;
+        } 
+		else {
+		    adds->heap_end += increase;
+            *retval = (int) end;
+            return 0;
+		}
+    }
+    
+    if(increase > 0) {
+        if(adds->heap_end + increase > adds->stack_end) {
+			return EINVAL;
+        }
+		else { 
+			adds->heap_end += increase;
+            *retval = (int) end;
+            return 0;
+		}
+    }
+
+	if(increase == 0) {                       //nothing to change
+        *retval = (int) end;
+        return 0;
+    }
+
+    return ENOMEM;
+}
+
+

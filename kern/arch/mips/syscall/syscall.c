@@ -37,6 +37,7 @@
 #include <current.h>
 #include <copyinout.h>
 #include <syscall.h>
+#include <proc.h>
 
 
 /*
@@ -224,6 +225,10 @@ syscall(struct trapframe *tf)
 
 
 	    /* Even more system calls will go here */
+
+		case SYS_sbrk:
+		err=sys_sbrk( (intptr_t)tf->tf_a0,&retval);
+		break;
 
 
 	    default:

@@ -100,5 +100,7 @@ struct addrspace *proc_getas(void);
 /* Change the address space of the current process, and return the old one. */
 struct addrspace *proc_setas(struct addrspace *);
 
+/*properly handle TLB faults to virtual pages in that area. */
+int sys_sbrk(intptr_t increase, int *retval);
 
 #endif /* _PROC_H_ */
